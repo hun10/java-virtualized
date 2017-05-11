@@ -5,11 +5,14 @@ import javax.tools.ToolProvider;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 public class VirtualizedPluginTest {
     @Test
     public void test() {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        compiler.run(
+
+        int exitCode = compiler.run(
                 null,
                 null,
                 null,
@@ -18,5 +21,7 @@ public class VirtualizedPluginTest {
                 "-Xplugin:Virtualized",
                 getClass().getResource("Testbed.java").getFile()
         );
+
+        assertEquals(0, exitCode);
     }
 }
