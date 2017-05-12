@@ -1,5 +1,6 @@
 package com.urbanowicz.javac;
 
+import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
@@ -36,6 +37,54 @@ class VirtualTranslator extends TreeTranslator {
             ident.pos = jcBinary.pos;
             result = make.Apply(null, ident, List.of(jcBinary.lhs, jcBinary.rhs));
             result.pos = jcBinary.lhs.pos;
+        }
+    }
+
+    @Override
+    public void visitAssign(JCTree.JCAssign jcAssign) {
+        super.visitAssign(jcAssign);
+
+        if (enabledMethodsStack.head) {
+            Name name = names.fromString("cast");
+            JCTree.JCIdent ident = make.Ident(name);
+            ident.pos = jcAssign.pos;
+            JCTree.JCMethodInvocation apply = make.Apply(
+                    null,
+                    ident,
+                    List.of(jcAssign.getVariable(), jcAssign.getExpression())
+            );
+            apply.pos = jcAssign.pos;
+
+            result = make.Assign(jcAssign.getVariable(), apply);
+            result.pos = jcAssign.pos;
+        }
+    }
+
+    @Override
+    public void visitVarDef(JCTree.JCVariableDecl jcVariableDecl) {
+        super.visitVarDef(jcVariableDecl);
+
+        if (enabledMethodsStack.head && jcVariableDecl.init != null) {
+            JCTree.JCTypeCast jcTypeCast = make.TypeCast(jcVariableDecl.getType(), make.Literal(TypeTag.BOT, null));
+            jcTypeCast.pos = jcVariableDecl.pos;
+
+            Name name = names.fromString("cast");
+            JCTree.JCIdent ident = make.Ident(name);
+            ident.pos = jcVariableDecl.init.pos;
+            JCTree.JCMethodInvocation apply = make.Apply(
+                    null,
+                    ident,
+                    List.of(jcTypeCast, jcVariableDecl.getInitializer())
+            );
+            apply.pos = jcVariableDecl.init.pos;
+
+            result = make.VarDef(
+                    jcVariableDecl.getModifiers(),
+                    jcVariableDecl.getName(),
+                    jcVariableDecl.vartype,
+                    apply
+            );
+            result.pos = jcVariableDecl.pos;
         }
     }
 

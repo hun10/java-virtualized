@@ -6,16 +6,28 @@ public class Testbed {
 
     @Virtualized
     public static void main(String... args) {
-        BigInteger s1 = BigInteger.valueOf(98);
-        BigInteger s2 = BigInteger.valueOf(95);
-        BigInteger x = s1 + s2;
-    }
+        String x = ""; // non-initialized vars are not supported
 
-    static int plus(int x, int y) {
-        return x + y;
+        BigInteger s1 = 98;
+        BigInteger s2 = 95;
+        x = s1 + s2;
+
+        System.out.println(x);
     }
 
     static BigInteger plus(BigInteger x, BigInteger y) {
         return x.add(y);
+    }
+
+    static BigInteger cast(BigInteger x, long y) {
+        return BigInteger.valueOf(y);
+    }
+
+    static String cast(String x, Number y) {
+        return y.toString();
+    }
+
+    static String cast(String x, String y) {
+        return y;
     }
 }
