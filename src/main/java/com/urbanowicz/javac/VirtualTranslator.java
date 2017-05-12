@@ -32,8 +32,10 @@ class VirtualTranslator extends TreeTranslator {
         JCTree.Tag tag = jcBinary.getTag();
         if (enabledMethodsStack.head && !tag.isAssignop()) {
             Name name = names.fromString(tag.name().toLowerCase());
-            result = make.Apply(null, make.Ident(name), List.of(jcBinary.lhs, jcBinary.rhs));
-            result.pos = jcBinary.pos;
+            JCTree.JCIdent ident = make.Ident(name);
+            ident.pos = jcBinary.pos;
+            result = make.Apply(null, ident, List.of(jcBinary.lhs, jcBinary.rhs));
+            result.pos = jcBinary.lhs.pos;
         }
     }
 
@@ -59,11 +61,26 @@ class VirtualTranslator extends TreeTranslator {
     }
 
     @Override
-    public void visitTopLevel(JCTree.JCCompilationUnit jcCompilationUnit) {
-        if (VIRTUALIZED_PACKAGE.equals(jcCompilationUnit.getPackageName().toString())) {
-            annotationImported = true;
+    public void visitImport(JCTree.JCImport jcImport) {
+        super.visitImport(jcImport);
+
+        String qualifier = jcImport.getQualifiedIdentifier().toString();
+
+        if (qualifier.endsWith("*")) {
+            qualifier = qualifier.replace("*", VIRTUALIZED);
         }
 
+        if (VIRTUALIZED_FQN.equals(qualifier)) {
+            annotationImported = true;
+        }
+    }
+
+    @Override
+    public void visitTopLevel(JCTree.JCCompilationUnit jcCompilationUnit) {
+        annotationImported = VIRTUALIZED_PACKAGE.equals(jcCompilationUnit.getPackageName().toString());
+
         super.visitTopLevel(jcCompilationUnit);
+
+        annotationImported = false;
     }
 }
