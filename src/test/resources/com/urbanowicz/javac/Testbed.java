@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 public class Testbed {
 
+    @Virtualized
     public static void main(String... args) {
         BigInteger s1 = BigInteger.valueOf(98);
         BigInteger s2 = BigInteger.valueOf(95);

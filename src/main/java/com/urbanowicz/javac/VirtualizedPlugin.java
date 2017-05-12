@@ -32,8 +32,4 @@ public class VirtualizedPlugin implements Plugin {
             }
         });
     }
-
-    public static <T> T virtual(T expression) {
-        throw new IllegalStateException();
-    }
 }
