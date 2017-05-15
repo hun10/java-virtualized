@@ -31,7 +31,7 @@ class VirtualTranslator extends TreeTranslator {
         super.visitBinary(jcBinary);
 
         JCTree.Tag tag = jcBinary.getTag();
-        if (enabledMethodsStack.head && !tag.isAssignop()) {
+        if (isVirtualized() && !tag.isAssignop()) {
             Name name = names.fromString(tag.name().toLowerCase());
             JCTree.JCIdent ident = make.Ident(name);
             ident.pos = jcBinary.pos;
@@ -44,7 +44,7 @@ class VirtualTranslator extends TreeTranslator {
     public void visitTypeCast(JCTree.JCTypeCast jcTypeCast) {
         super.visitTypeCast(jcTypeCast);
 
-        if (enabledMethodsStack.head) {
+        if (isVirtualized()) {
             result = makeCast(jcTypeCast.getType(), jcTypeCast.getExpression());
         }
     }
@@ -53,7 +53,7 @@ class VirtualTranslator extends TreeTranslator {
     public void visitVarDef(JCTree.JCVariableDecl jcVariableDecl) {
         super.visitVarDef(jcVariableDecl);
 
-        if (enabledMethodsStack.head && jcVariableDecl.init != null) {
+        if (isVirtualized() && jcVariableDecl.init != null) {
             result = make.VarDef(
                     jcVariableDecl.getModifiers(),
                     jcVariableDecl.getName(),
@@ -62,6 +62,10 @@ class VirtualTranslator extends TreeTranslator {
             );
             result.pos = jcVariableDecl.pos;
         }
+    }
+
+    private boolean isVirtualized() {
+        return enabledMethodsStack.head != null && enabledMethodsStack.head;
     }
 
     private JCTree.JCMethodInvocation makeCast(JCTree type, JCTree.JCExpression expression) {
