@@ -6,11 +6,11 @@ public class Testbed {
 
     @Virtualized
     public static void main(String... args) {
-        String x = ""; // non-initialized vars are not supported
+        String x;
 
         BigInteger s1 = 98;
         BigInteger s2 = 95;
-        x = s1 + s2;
+        x = (String) (s1 + s2);
 
         System.out.println(x);
     }

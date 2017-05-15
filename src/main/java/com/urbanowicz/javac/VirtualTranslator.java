@@ -41,22 +41,11 @@ class VirtualTranslator extends TreeTranslator {
     }
 
     @Override
-    public void visitAssign(JCTree.JCAssign jcAssign) {
-        super.visitAssign(jcAssign);
+    public void visitTypeCast(JCTree.JCTypeCast jcTypeCast) {
+        super.visitTypeCast(jcTypeCast);
 
         if (enabledMethodsStack.head) {
-            Name name = names.fromString("cast");
-            JCTree.JCIdent ident = make.Ident(name);
-            ident.pos = jcAssign.pos;
-            JCTree.JCMethodInvocation apply = make.Apply(
-                    null,
-                    ident,
-                    List.of(jcAssign.getVariable(), jcAssign.getExpression())
-            );
-            apply.pos = jcAssign.pos;
-
-            result = make.Assign(jcAssign.getVariable(), apply);
-            result.pos = jcAssign.pos;
+            result = makeCast(jcTypeCast.getType(), jcTypeCast.getExpression());
         }
     }
 
@@ -65,27 +54,31 @@ class VirtualTranslator extends TreeTranslator {
         super.visitVarDef(jcVariableDecl);
 
         if (enabledMethodsStack.head && jcVariableDecl.init != null) {
-            JCTree.JCTypeCast jcTypeCast = make.TypeCast(jcVariableDecl.getType(), make.Literal(TypeTag.BOT, null));
-            jcTypeCast.pos = jcVariableDecl.pos;
-
-            Name name = names.fromString("cast");
-            JCTree.JCIdent ident = make.Ident(name);
-            ident.pos = jcVariableDecl.init.pos;
-            JCTree.JCMethodInvocation apply = make.Apply(
-                    null,
-                    ident,
-                    List.of(jcTypeCast, jcVariableDecl.getInitializer())
-            );
-            apply.pos = jcVariableDecl.init.pos;
-
             result = make.VarDef(
                     jcVariableDecl.getModifiers(),
                     jcVariableDecl.getName(),
                     jcVariableDecl.vartype,
-                    apply
+                    makeCast(jcVariableDecl.getType(), jcVariableDecl.getInitializer())
             );
             result.pos = jcVariableDecl.pos;
         }
+    }
+
+    private JCTree.JCMethodInvocation makeCast(JCTree type, JCTree.JCExpression expression) {
+        JCTree.JCTypeCast jcTypeCast = make.TypeCast(type, make.Literal(TypeTag.BOT, null));
+        jcTypeCast.pos = expression.pos;
+
+        Name name = names.fromString("cast");
+        JCTree.JCIdent ident = make.Ident(name);
+        ident.pos = expression.pos;
+        JCTree.JCMethodInvocation apply = make.Apply(
+                null,
+                ident,
+                List.of(jcTypeCast, expression)
+        );
+        apply.pos = expression.pos;
+
+        return apply;
     }
 
     @Override
